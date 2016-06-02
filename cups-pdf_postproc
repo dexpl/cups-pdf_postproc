@@ -1,0 +1,19 @@
+#!/bin/bash
+
+myName=$(basename $(readlink -f $0))
+baseDir=/srv/print-srv
+#pdfDir="${baseDir}/pdf"
+pdfName="${1}"
+jpgDir="${baseDir}/jpg"
+jpgName="${jpgDir}/$(basename "${pdfName}" .pdf).jpg"
+# Permissions to set to resulting jpg. Anything acceptable by chmod(1)
+jpgMode=0666
+
+exec > /tmp/${myName}.$(date +%F.%s).log 2>&1
+id
+echo $*
+set -e
+[ -r "${pdfName}" ] || exit 1
+[ -d "${jpgDir}" ] || mkdir "${jpgDir}"
+convert "${pdfName}" "${jpgName}"
+chmod ${jpgMode} "${jpgName}"
