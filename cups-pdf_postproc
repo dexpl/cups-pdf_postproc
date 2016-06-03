@@ -20,10 +20,14 @@ jpgName="$(basename "${pdfName}" .pdf)"
 tempDir="$(mktemp -d -t "${myName}.XXX")"
 # Permissions to set to resulting jpg. Anything acceptable by chmod(1)
 jpgMode=0666
+# SMB share to put results into (currently it must allow guests to write)
+# Comment or set to empty to prevent SMB file transfer
+smbShare=//scan/scan
 logger="logger -i -s -t ${myName}"
 
-set -x
-exec > /tmp/${myName}.$(date +%F.%s).log 2>&1
+# Uncomment two lines below to make it produce verbose logs
+#set -x
+#exec > /tmp/${myName}.$(date +%F.%s).log 2>&1
 ${logger} "Here I ($(id)) am"
 ${logger} "Options are $*"
 [ -r "${pdfName}" ] || exit 1
@@ -39,6 +43,7 @@ pdftocairo -jpeg -singlefile "${pdfName}" "${jpgName}"
 ${logger} "Converted ${pdfName} to ${jpgName}"
 chmod ${jpgMode} *
 ${logger} "Chmodded * to ${jpgMode}"
-mv -t "${jpgDir}" *
+cp -t "${jpgDir}" *
+[ -n "${smbShare}" ] && find . -type f -print0 | tar -cT- --null | smbclient ${smbShare} "" -N -Tx -
 ${logger} "All done, exiting"
 popd
