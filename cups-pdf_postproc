@@ -4,7 +4,7 @@ _cleanup() {
 	[ -d "${tempDir}" ] && rm -r "${tempDir}" || :
 }
 
-trap _cleanup EXIT HUP INT QUIT ABRT
+trap _cleanup EXIT HUP INT QUIT ABRT ERR
 
 set -e
 
@@ -15,13 +15,16 @@ pdfName="${1}"
 jpgDir="${baseDir}/jpg"
 jpgName="${jpgDir}/$(basename "${pdfName}" .pdf).jpg"
 jpgName="$(basename "${pdfName}" .pdf).jpg"
+# Do not need to set the .jpg extension while using pdftocairo(1)
+jpgName="$(basename "${pdfName}" .pdf)"
 tempDir="$(mktemp -d -t "${myName}.XXX")"
 # Permissions to set to resulting jpg. Anything acceptable by chmod(1)
 jpgMode=0666
 logger="logger -i -s -t ${myName}"
 
-#exec > /tmp/${myName}.$(date +%F.%s).log 2>&1
-${logger} "Here i ($(id)) am"
+set -x
+exec > /tmp/${myName}.$(date +%F.%s).log 2>&1
+${logger} "Here I ($(id)) am"
 ${logger} "Options are $*"
 [ -r "${pdfName}" ] || exit 1
 ${logger} "${pdfName} is readable, going on"
@@ -31,10 +34,11 @@ ${logger} "${jpgDir} is here, going on"
 # them correctly do the conversion into a tempDir, chmod all the files in
 # tempDir and move 'em into jpgDir
 pushd "${tempDir}"
-convert "${pdfName}" "${jpgName}"
+#convert "${pdfName}" -quality 100 "${jpgName}"
+pdftocairo -jpeg -singlefile "${pdfName}" "${jpgName}"
 ${logger} "Converted ${pdfName} to ${jpgName}"
 chmod ${jpgMode} *
-${logger} "Chmodded "*" to ${jpgMode}"
+${logger} "Chmodded * to ${jpgMode}"
 mv -t "${jpgDir}" *
 ${logger} "All done, exiting"
 popd
