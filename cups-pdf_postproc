@@ -39,7 +39,8 @@ ${logger} "${jpgDir} is here, going on"
 # tempDir and move 'em into jpgDir
 pushd "${tempDir}"
 #convert "${pdfName}" -quality 100 "${jpgName}"
-pdftocairo -jpeg -singlefile "${pdfName}" "${jpgName}"
+#pdftocairo -jpeg -singlefile "${pdfName}" "${jpgName}"
+pdftocairo -jpeg "${pdfName}" "${jpgName}"
 ${logger} "Converted ${pdfName} to ${jpgName}"
 chmod ${jpgMode} *
 ${logger} "Chmodded * to ${jpgMode}"
